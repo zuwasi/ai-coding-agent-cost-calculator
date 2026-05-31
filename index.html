@@ -1,0 +1,2109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
+  <title>AI Coding Agent Cost Calculator</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0f172a;
+      --panel: #111827;
+      --panel-2: #1f2937;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --border: #374151;
+      --accent: #38bdf8;
+      --accent-2: #22c55e;
+      --warn: #f59e0b;
+      --danger: #fb7185;
+      --glow-a: rgba(56, 189, 248, 0.18);
+      --glow-b: rgba(34, 197, 94, 0.14);
+    }
+
+    body[data-mode="amp"] {
+      --accent: #ef4444;
+      --accent-2: #00d4ff;
+      --glow-a: rgba(239, 68, 68, 0.22);
+      --glow-b: rgba(0, 212, 255, 0.16);
+    }
+
+    body[data-mode="claude"] {
+      --accent: #d97757;
+      --accent-2: #f5d0b5;
+      --glow-a: rgba(217, 119, 87, 0.22);
+      --glow-b: rgba(245, 208, 181, 0.12);
+    }
+
+    body[data-mode="cursor"] {
+      --accent: #ffffff;
+      --accent-2: #8b5cf6;
+      --glow-a: rgba(255, 255, 255, 0.16);
+      --glow-b: rgba(139, 92, 246, 0.18);
+    }
+
+    body[data-mode="droid"] {
+      --accent: #22c55e;
+      --accent-2: #a3e635;
+      --glow-a: rgba(34, 197, 94, 0.22);
+      --glow-b: rgba(163, 230, 53, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, var(--glow-a), transparent 32rem),
+        radial-gradient(circle at bottom right, var(--glow-b), transparent 32rem),
+        var(--bg);
+      color: var(--text);
+      transition: background 0.25s ease;
+    }
+
+    main {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 40px 0;
+    }
+
+    header {
+      margin-bottom: 24px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .menu {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 16px;
+      color: var(--text);
+      font-size: 1rem;
+      font-weight: 700;
+      text-align: right;
+      text-shadow: 0 1px 12px rgba(0, 0, 0, 0.45);
+    }
+
+    .brand img {
+      width: 156px;
+      height: 156px;
+      object-fit: contain;
+      border-radius: 30px;
+      background:
+        radial-gradient(circle at 28% 18%, rgba(255, 255, 255, 0.55), transparent 28%),
+        linear-gradient(145deg, rgba(255, 255, 255, 0.28), rgba(56, 189, 248, 0.12) 45%, rgba(2, 6, 23, 0.82));
+      border: 2px solid rgba(255, 255, 255, 0.34);
+      padding: 12px;
+      transform: perspective(620px) rotateX(9deg) rotateY(-14deg) translateZ(0);
+      transform-style: preserve-3d;
+      box-shadow:
+        0 28px 46px rgba(0, 0, 0, 0.55),
+        18px 18px 0 rgba(0, 0, 0, 0.24),
+        -2px -2px 0 rgba(255, 255, 255, 0.36) inset,
+        3px 3px 0 rgba(255, 255, 255, 0.08) inset,
+        0 0 72px rgba(56, 189, 248, 0.34),
+        0 0 96px var(--glow-a);
+      transition: transform 0.22s ease, box-shadow 0.22s ease;
+    }
+
+    .brand img:hover {
+      transform: perspective(620px) rotateX(4deg) rotateY(-7deg) translateY(-4px) scale(1.04);
+      box-shadow:
+        0 34px 58px rgba(0, 0, 0, 0.62),
+        20px 20px 0 rgba(0, 0, 0, 0.22),
+        -2px -2px 0 rgba(255, 255, 255, 0.42) inset,
+        0 0 88px rgba(56, 189, 248, 0.48),
+        0 0 120px var(--glow-a);
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    h1,
+    h2,
+    p {
+      margin-top: 0;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+      font-size: clamp(2rem, 5vw, 4rem);
+      letter-spacing: -0.05em;
+      line-height: 0.95;
+    }
+
+    h2 {
+      margin-bottom: 14px;
+      font-size: 1.05rem;
+    }
+
+    .lede {
+      max-width: 790px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(300px, 420px) 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: rgba(17, 24, 39, 0.86);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.24);
+      overflow: visible;
+    }
+
+    .card-body {
+      padding: 20px;
+    }
+
+    .inputs {
+      display: grid;
+      gap: 14px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    input,
+    select {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #020617;
+      color: var(--text);
+      padding: 11px 12px;
+      font: inherit;
+    }
+
+    input:focus,
+    select:focus {
+      outline: 2px solid rgba(56, 189, 248, 0.45);
+      border-color: var(--accent);
+    }
+
+    select:disabled {
+      opacity: 0.58;
+      cursor: not-allowed;
+    }
+
+    .mode-card {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--glow-a), rgba(2, 6, 23, 0.45));
+      padding: 14px;
+    }
+
+    .mode-logo {
+      width: 58px;
+      height: 58px;
+      border: 1px solid var(--accent);
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      background: #020617;
+      color: var(--accent);
+      font-weight: 900;
+      letter-spacing: -0.06em;
+      box-shadow: 0 0 30px var(--glow-a);
+    }
+
+    .mode-logo.amp-logo {
+      color: #ef4444;
+    }
+
+    .mode-logo.claude-logo {
+      color: #d97757;
+      border-radius: 50%;
+    }
+
+    .mode-logo.cursor-logo {
+      color: #ffffff;
+      transform: rotate(-8deg);
+    }
+
+    .mode-logo.droid-logo {
+      color: #22c55e;
+      border-radius: 18px 18px 22px 22px;
+    }
+
+    .mode-title {
+      margin: 0 0 4px;
+      font-size: 1.15rem;
+      font-weight: 800;
+    }
+
+    .mode-title a {
+      color: var(--text);
+    }
+
+    .mode-note {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .mode-assumptions {
+      margin-top: 14px;
+      border-left: 3px solid var(--accent);
+      padding-left: 12px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .section-title,
+    .field-label,
+    .metric-title,
+    .formula-title {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .metric strong.metric-title {
+      display: inline-flex;
+    }
+
+    .help {
+      position: relative;
+      display: inline-grid;
+      place-items: center;
+      width: 18px;
+      height: 18px;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      color: var(--accent);
+      background: #020617;
+      font-size: 0.72rem;
+      font-weight: 800;
+      cursor: help;
+    }
+
+    .help::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      z-index: 20;
+      bottom: calc(100% + 10px);
+      left: 50%;
+      width: min(320px, 78vw);
+      transform: translateX(-50%) translateY(4px);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #020617;
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.38);
+      color: var(--text);
+      padding: 10px 12px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      line-height: 1.45;
+      letter-spacing: normal;
+      opacity: 0;
+      pointer-events: none;
+      text-transform: none;
+      transition: opacity 0.16s ease, transform 0.16s ease;
+      white-space: normal;
+    }
+
+    .help:hover::after,
+    .help:focus::after {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .results {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .metric {
+      min-height: 132px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: rgba(31, 41, 55, 0.72);
+      padding: 16px;
+    }
+
+    .metric strong {
+      display: block;
+      margin-bottom: 9px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .metric span {
+      display: block;
+      color: white;
+      font-size: clamp(1.55rem, 4vw, 2.25rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+    }
+
+    .metric small {
+      display: block;
+      margin-top: 9px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .accent span {
+      color: var(--accent);
+    }
+
+    .green span {
+      color: var(--accent-2);
+    }
+
+    .warn span {
+      color: var(--warn);
+    }
+
+    .danger span {
+      color: var(--danger);
+    }
+
+    .formula {
+      margin-top: 18px;
+      border: 1px dashed var(--border);
+      border-radius: 16px;
+      background: rgba(2, 6, 23, 0.68);
+      padding: 16px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .formula h2 {
+      margin-bottom: 10px;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(2, 6, 23, 0.78);
+      padding: 18px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal {
+      width: min(860px, 100%);
+      max-height: min(86vh, 900px);
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: #0f172a;
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal.diff-modal {
+      width: min(1280px, 96vw);
+      height: min(88vh, 980px);
+      min-width: min(760px, 96vw);
+      min-height: 520px;
+      resize: both;
+    }
+
+    .modal-header {
+      position: sticky;
+      top: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.96);
+      padding: 18px 20px;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+
+    .modal-body {
+      padding: 20px;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .modal-body h3 {
+      margin: 22px 0 8px;
+      color: var(--text);
+    }
+
+    .modal-body li {
+      margin-bottom: 8px;
+    }
+
+    .histogram {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .histogram-row {
+      display: grid;
+      grid-template-columns: minmax(150px, 240px) 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .histogram-label {
+      color: var(--text);
+      font-size: 0.86rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .histogram-track {
+      height: 18px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(2, 6, 23, 0.8);
+      overflow: hidden;
+    }
+
+    .histogram-bar {
+      height: 100%;
+      min-width: 3px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    }
+
+    .tool-amp {
+      --tool-color: #ef4444;
+      --tool-color-soft: rgba(239, 68, 68, 0.18);
+    }
+
+    .tool-claude {
+      --tool-color: #d97757;
+      --tool-color-soft: rgba(217, 119, 87, 0.2);
+    }
+
+    .tool-cursor {
+      --tool-color: #8b5cf6;
+      --tool-color-soft: rgba(139, 92, 246, 0.22);
+    }
+
+    .tool-droid {
+      --tool-color: #22c55e;
+      --tool-color-soft: rgba(34, 197, 94, 0.2);
+    }
+
+    .tool-custom {
+      --tool-color: var(--accent);
+      --tool-color-soft: var(--glow-a);
+    }
+
+    .histogram-row.tool-amp .histogram-bar,
+    .histogram-row.tool-claude .histogram-bar,
+    .histogram-row.tool-cursor .histogram-bar,
+    .histogram-row.tool-droid .histogram-bar,
+    .histogram-row.tool-custom .histogram-bar {
+      background: linear-gradient(90deg, var(--tool-color), var(--accent-2));
+    }
+
+    .histogram-value {
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      font-size: 0.84rem;
+    }
+
+    .diff-table {
+      width: 100%;
+      margin-top: 18px;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    .diff-table th,
+    .diff-table td {
+      border-bottom: 1px solid var(--border);
+      padding: 8px 6px;
+      text-align: left;
+    }
+
+    .diff-table th {
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .diff-task-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .diff-task-card {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(2, 6, 23, 0.58);
+      padding: 12px;
+    }
+
+    .diff-task-card.tool-amp,
+    .diff-task-card.tool-claude,
+    .diff-task-card.tool-cursor,
+    .diff-task-card.tool-droid,
+    .diff-task-card.tool-custom {
+      border-color: var(--tool-color);
+      background: linear-gradient(135deg, var(--tool-color-soft), rgba(2, 6, 23, 0.58));
+      box-shadow: 0 0 28px var(--tool-color-soft);
+    }
+
+    .tool-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--tool-color);
+      border-radius: 999px;
+      background: var(--tool-color-soft);
+      color: var(--text);
+      padding: 2px 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .diff-controls {
+      display: grid;
+      gap: 8px;
+      margin: 16px 0;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(2, 6, 23, 0.58);
+      padding: 12px;
+    }
+
+    .diff-controls input[type="range"] {
+      width: 100%;
+    }
+
+    .diff-controls-output {
+      color: var(--text);
+      font-weight: 800;
+    }
+
+    .diff-row-tool {
+      border-left: 4px solid var(--tool-color);
+      background: linear-gradient(90deg, var(--tool-color-soft), transparent 45%);
+    }
+
+    .diff-task-card strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+
+    .diff-task-card small {
+      display: block;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .flow-diagram {
+      display: grid;
+      gap: 10px;
+      margin: 16px 0;
+    }
+
+    .flow-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .flow-node {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(2, 6, 23, 0.72);
+      color: var(--text);
+      padding: 12px;
+      min-height: 94px;
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18);
+    }
+
+    .flow-node strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--accent);
+    }
+
+    .flow-arrow {
+      color: var(--accent-2);
+      font-weight: 900;
+      text-align: center;
+      letter-spacing: 0.08em;
+    }
+
+    code {
+      color: #bae6fd;
+      font-family: Consolas, Monaco, monospace;
+      font-size: 0.92em;
+    }
+
+    .scenario-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .use-case-note {
+      margin-top: 12px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(2, 6, 23, 0.46);
+      color: var(--muted);
+      padding: 12px;
+      font-size: 0.86rem;
+      line-height: 1.5;
+    }
+
+    .use-case-note strong {
+      color: var(--text);
+    }
+
+    .use-case-note h2 {
+      margin: 0 0 12px;
+      color: var(--text);
+      font-size: 1rem;
+    }
+
+    .use-case-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .use-case-panel {
+      display: grid;
+      gap: 10px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(15, 23, 42, 0.64);
+      padding: 12px;
+    }
+
+    .use-case-panel p {
+      margin: 0;
+    }
+
+    .session-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .session-hint {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.4;
+    }
+
+    button {
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: #020617;
+      color: var(--text);
+      padding: 9px 13px;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    button:hover {
+      border-color: var(--accent);
+      color: #e0f2fe;
+    }
+
+    footer {
+      margin-top: 22px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 900px) {
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column-reverse;
+      }
+
+      .brand {
+        text-align: left;
+      }
+
+      .grid,
+      .results,
+      .use-case-grid,
+      .diff-task-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .two-col {
+        grid-template-columns: 1fr;
+      }
+
+      .histogram-row {
+        grid-template-columns: 1fr;
+      }
+
+      .flow-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body data-mode="amp">
+  <main>
+    <header>
+      <div class="topbar">
+        <nav class="menu" aria-label="Page menu">
+          <button type="button" id="openExplanation">An explenation what this page does</button>
+        </nav>
+        <div class="brand" aria-label="ESL branding">
+          <span>
+            Made by <a href="https://www.eswlab.com" target="_blank" rel="noopener noreferrer">ESL</a>, the AI
+            <a href="https://en.wikipedia.org/wiki/Systems_development_life_cycle" target="_blank" rel="noopener noreferrer">SDLC</a>
+            Specialists
+          </span>
+          <a href="https://www.eswlab.com" target="_blank" rel="noopener noreferrer" aria-label="ESL website">
+            <img src="ESL-AI-LOGOS.png" alt="ESL AI logo">
+          </a>
+        </div>
+      </div>
+      <h1>AI Coding Agent Cost Calculator</h1>
+      <p class="lede">
+        Compare Amp, Claude Code, Cursor, and Factory Droid modes. Each mode applies explicit assumptions about
+        context size, autonomy loops, model choice, and retry behavior on top of the same token-cost formula.
+      </p>
+    </header>
+
+    <section class="grid" aria-label="Calculator">
+      <div class="card">
+        <div class="card-body">
+          <h2 class="section-title">Inputs <span class="help" tabindex="0" data-tooltip="Set the team size, adoption rate, usage intensity, model price, and adjustment multipliers. These controls turn the article's warning about token-metered spend into a transparent planning estimate.">?</span></h2>
+          <div class="mode-card">
+            <div class="mode-logo amp-logo" id="modeLogo">A</div>
+            <div>
+              <p class="mode-title"><a id="modeTitle" href="https://ampcode.com" target="_blank" rel="noopener noreferrer">Amp mode</a></p>
+              <p class="mode-note" id="modeNote">Governed agent workflow with context discipline and observability overhead.</p>
+            </div>
+          </div>
+          <div class="inputs">
+            <div class="two-col">
+              <label>
+                <span class="field-label">Choose agent <span class="help" tabindex="0" data-tooltip="Select the coding-agent workflow being modeled. The selected mode changes default assumptions and links to the agent home page: Amp, Claude Code, Cursor, or Factory Droid.">?</span></span>
+                <select id="mode" title="Choose which AI coding-agent workflow to model.">
+                  <option value="amp">Amp specific mode</option>
+                  <option value="claude">Claude Code specific mode</option>
+                  <option value="cursor">Cursor mode</option>
+                  <option value="droid">Factory Droid mode</option>
+                </select>
+              </label>
+              <label>
+                <span class="field-label">Chosen LLM / model <span class="help" tabindex="0" data-tooltip="Choose the model or vendor-specific mode used for token pricing. The options are populated from current public docs where possible; proxy rows are marked as planning estimates.">?</span></span>
+                <select id="llm" title="Choose the model or model-like mode used for input/output token price assumptions.">
+                  <option value="sonnet">Claude Sonnet-class</option>
+                  <option value="opus">Claude Opus-class</option>
+                  <option value="gpt">GPT premium-class</option>
+                  <option value="gemini">Gemini Pro-class</option>
+                  <option value="local">Local / open model</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="two-col">
+              <label>
+                <span class="field-label">Engineers <span class="help" tabindex="0" data-tooltip="Total engineers in the population. The monthly team cost uses this number multiplied by Adoption %. Use this to model a department or whole engineering organization.">?</span></span>
+                <input id="engineers" type="number" min="0" step="1" value="1000" title="Total engineers in scope for the estimate.">
+              </label>
+              <label>
+                <span class="field-label">Adoption % <span class="help" tabindex="0" data-tooltip="Percent of engineers actively using the agent. The article's risk appears when enthusiastic adoption turns token-metered usage into a large variable spend line.">?</span></span>
+                <input id="adoption" type="number" min="0" max="100" step="1" value="80" title="Percent of engineers actively using the selected agent.">
+              </label>
+            </div>
+
+            <div class="two-col">
+              <label>
+                <span class="field-label">Sessions / engineer / day <span class="help" tabindex="0" data-tooltip="Average agent interactions or task sessions per active engineer per workday. More sessions scale cost linearly, which is the core warning in the article.">?</span></span>
+                <input id="sessions" type="number" min="0" step="1" value="30" title="Average agent sessions per active engineer per workday.">
+              </label>
+              <label>
+                <span class="field-label">Workdays / month <span class="help" tabindex="0" data-tooltip="Number of billing-relevant working days in a month. Monthly cost equals active engineers times daily usage times this value.">?</span></span>
+                <input id="workdays" type="number" min="0" step="1" value="20" title="Working days per month used in the monthly estimate.">
+              </label>
+            </div>
+
+            <div class="two-col">
+              <label>
+                <span class="field-label">Input tokens / session <span class="help" tabindex="0" data-tooltip="Prompt, codebase context, retrieved files, tool transcripts, and cached context that may be billed as input. Large context windows can make this number dominate the bill.">?</span></span>
+                <input id="inputTokens" type="number" min="0" step="1000" value="200000" title="Input tokens consumed per session before multipliers.">
+              </label>
+              <label>
+                <span class="field-label">Output tokens / session <span class="help" tabindex="0" data-tooltip="Agent responses, plans, code edits, summaries, and command explanations. Output tokens usually cost more per million than input tokens.">?</span></span>
+                <input id="outputTokens" type="number" min="0" step="1000" value="30000" title="Output tokens generated per session before multipliers.">
+              </label>
+            </div>
+
+            <div class="two-col">
+              <label>
+                <span class="field-label">Input price / 1M tokens ($) <span class="help" tabindex="0" data-tooltip="Published or proxy input price per million tokens for the selected model. For Factory Droid, this is a credit-equivalent estimate from the documented multiplier, not a public per-token invoice rate.">?</span></span>
+                <input id="inputPrice" type="number" min="0" step="0.01" value="3" title="Input token price per one million tokens.">
+              </label>
+              <label>
+                <span class="field-label">Output price / 1M tokens ($) <span class="help" tabindex="0" data-tooltip="Published or proxy output price per million tokens. Output is often the expensive side of coding-agent loops, especially when agents generate long plans, diffs, and explanations.">?</span></span>
+                <input id="outputPrice" type="number" min="0" step="0.01" value="15" title="Output token price per one million tokens.">
+              </label>
+            </div>
+
+            <div class="two-col">
+              <label>
+                <span class="field-label">Fixed-seat benchmark / engineer ($) <span class="help" tabindex="0" data-tooltip="A flat monthly per-seat comparison point. The article contrasts predictable seat pricing with variable token-metered usage that can exceed expectations at scale.">?</span></span>
+                <input id="seatPrice" type="number" min="0" step="1" value="50" title="Monthly fixed-seat benchmark per active engineer.">
+              </label>
+              <label>
+                <span class="field-label">Monthly budget ($) <span class="help" tabindex="0" data-tooltip="Budget to compare against the projected run rate. Budget burn estimates how many workdays the budget would last at the current daily team cost.">?</span></span>
+                <input id="budget" type="number" min="0" step="1000" value="1000000" title="Monthly budget used for budget-burn comparison.">
+              </label>
+            </div>
+
+            <div class="two-col">
+              <label>
+                <span class="field-label">Context multiplier <span class="help" tabindex="0" data-tooltip="Adjusts input tokens for workflow context behavior. IDE workflows may use narrower context; terminal agents, large tasks, or full-repo context may push this higher.">?</span></span>
+                <input id="contextMultiplier" type="number" min="0" step="0.05" value="0.75" title="Multiplier applied to input tokens for context behavior.">
+              </label>
+              <label>
+                <span class="field-label">Agent loop multiplier <span class="help" tabindex="0" data-tooltip="Adjusts for retries, tool calls, planning loops, validation passes, and autonomous agent work. Higher autonomy usually increases this multiplier.">?</span></span>
+                <input id="loopMultiplier" type="number" min="0" step="0.05" value="1.10" title="Multiplier applied for agent loops, retries, tool calls, and validation passes.">
+              </label>
+            </div>
+          </div>
+
+          <div class="mode-assumptions" id="modeAssumptions">
+            Manual-backed assumption: Amp has deep, smart, and rush modes; can use subagents, Oracle, and Librarian; and charges pass-through provider/API costs for individual and non-enterprise workspaces. Mode rows below are planning proxies, not invoices.
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <h2 class="section-title">Results <span class="help" tabindex="0" data-tooltip="These cards convert the selected inputs into session cost, engineer cost, team run rate, seat-price comparison, and budget burn. They are planning estimates, not vendor invoices.">?</span></h2>
+          <div class="results">
+            <div class="metric accent">
+              <strong class="metric-title">Cost / session <span class="help" tabindex="0" data-tooltip="Estimated cost of one agent session after applying context and loop multipliers to input and output token costs.">?</span></strong>
+              <span id="sessionCost">$0</span>
+              <small id="tokenBreakdown">Input $0 + output $0</small>
+            </div>
+            <div class="metric green">
+              <strong class="metric-title">Cost / active engineer / month <span class="help" tabindex="0" data-tooltip="Daily active-engineer cost multiplied by workdays per month. This exposes how a reasonable session cost becomes material when repeated many times.">?</span></strong>
+              <span id="engineerMonthly">$0</span>
+              <small id="engineerDaily">$0 per active engineer per workday</small>
+            </div>
+            <div class="metric warn">
+              <strong class="metric-title">Team monthly cost <span class="help" tabindex="0" data-tooltip="Active engineers multiplied by their monthly agent cost. This is the main enterprise-scale risk discussed in the article.">?</span></strong>
+              <span id="teamMonthly">$0</span>
+              <small id="activeEngineers">0 active engineers</small>
+            </div>
+            <div class="metric">
+              <strong class="metric-title">Team annualized cost <span class="help" tabindex="0" data-tooltip="Monthly run rate multiplied by 12. Useful for procurement and budget planning, but it assumes the same usage pattern continues all year.">?</span></strong>
+              <span id="annualCost">$0</span>
+              <small>Monthly run rate × 12</small>
+            </div>
+            <div class="metric danger">
+              <strong class="metric-title">Over fixed-seat model <span class="help" tabindex="0" data-tooltip="Compares token-metered spend with a fixed per-seat benchmark. Values above 1× mean token usage is more expensive than the benchmark.">?</span></strong>
+              <span id="seatMultiple">0×</span>
+              <small id="seatCompare">Token cost vs fixed seats</small>
+            </div>
+            <div class="metric">
+              <strong class="metric-title">Budget burn <span class="help" tabindex="0" data-tooltip="Shows how many workdays the monthly budget would last at the projected daily run rate.">?</span></strong>
+              <span id="budgetBurn">—</span>
+              <small id="budgetText">Enter a monthly budget to compare</small>
+            </div>
+          </div>
+
+          <div class="formula">
+            <h2 class="formula-title">Formula <span class="help" tabindex="0" data-tooltip="The calculator keeps the math visible: adjust tokens for context and agent loops, price input/output separately, then scale by active engineers and workdays.">?</span></h2>
+            <div><code>effective tokens = base_tokens × context_multiplier × agent_loop_multiplier</code></div>
+            <div><code>session cost = effective_input_tokens / 1,000,000 × input_price + effective_output_tokens / 1,000,000 × output_price</code></div>
+            <div><code>monthly cost = active_engineers × sessions_per_day × workdays × session_cost</code></div>
+          </div>
+
+          <div class="scenario-row" aria-label="Scenario presets">
+            <button type="button" data-scenario="light" title="Lower-adoption, lower-token scenario for cautious pilots.">Light use</button>
+            <button type="button" data-scenario="article" title="Recreates the article-style example: 1,000 engineers, high adoption, token-metered usage.">Article example</button>
+            <button type="button" data-scenario="heavy" title="Stress test with high adoption, frequent sessions, larger context, and more agent loops.">Heavy enterprise</button>
+            <button type="button" data-scenario="uberish" title="Large-organization scenario inspired by the article's 5,000-engineer example claim.">5,000 engineers</button>
+            <button type="button" data-scenario="freertosLoongson" title="Safety-critical RTOS porting preset: 50 engineers, tight schedule, high validation loops, ISO 26262 and MISRA C compliance pressure.">FreeRTOS → Loongson safety RTOS</button>
+            <button type="button" data-scenario="enterpriseSaas" title="Large SaaS build preset: multi-tenant cloud app, 90 engineers, product pressure, security, observability, and integration work.">Enterprise SaaS platform</button>
+          </div>
+          <div class="use-case-note">
+            <h2>Typical use cases</h2>
+            <div class="use-case-grid">
+              <div class="use-case-panel">
+                <p>
+                  <strong>Safety-critical RTOS migration:</strong>
+                  converting <a href="https://www.freertos.org/" target="_blank" rel="noopener noreferrer">FreeRTOS</a>
+                  to Chinese <a href="https://www.loongson.cn/" target="_blank" rel="noopener noreferrer">Loongson CPUs</a>
+                  as an <a href="https://www.iso.org/standard/68383.html" target="_blank" rel="noopener noreferrer">ISO 26262</a>-compliant RTOS where all code is
+                  <a href="https://misra.org.uk/" target="_blank" rel="noopener noreferrer">MISRA C</a> 2025 compliant. The preset assumes 50 engineers, a tight schedule,
+                  heavy codebase context, Loongson/LoongArch porting, memory-protection design, temporal-independence evidence, safety-case documentation, static-analysis remediation, and repeated verification loops.
+                </p>
+                <button type="button" id="openFreertosFlow">Open RTOS flowgraph</button>
+              </div>
+              <div class="use-case-panel">
+                <p>
+                  <strong>Enterprise SaaS platform:</strong>
+                  building a large <a href="https://en.wikipedia.org/wiki/Software_as_a_service" target="_blank" rel="noopener noreferrer">SaaS</a>
+                  platform: multi-tenant backend, web UI, billing, identity, audit logs, observability, CI/CD, data migration, security reviews, and integrations.
+                  The preset models 90 engineers working under product-delivery pressure with many cross-team agent sessions.
+                </p>
+                <button type="button" id="openSaasFlow">Open SaaS flowgraph</button>
+              </div>
+            </div>
+          </div>
+          <div class="session-actions" aria-label="Saved session actions">
+            <button type="button" id="saveJson">Save JSON</button>
+            <button type="button" id="saveHtml">Save HTML</button>
+            <button type="button" id="loadSession">Load saved session</button>
+            <button type="button" id="showDiff">Diff saved sessions</button>
+            <input id="sessionFile" type="file" accept="application/json,.json" hidden>
+          </div>
+          <p class="session-hint">
+            Save JSON stores the current run in this browser and downloads a reusable file. Save HTML downloads a standalone report. Load saved session imports a JSON file. Diff compares all browser-saved JSON snapshots.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      This is a planning model, not an invoice. Real bills vary with model, caching, context reuse, retries, discounts, taxes, and whether tool vendors charge per seat, per token, or through a blended enterprise contract. Amp's manual says individual and non-enterprise workspaces are pass-through provider/API pricing, while Enterprise usage is 50% more expensive.
+    </footer>
+  </main>
+
+  <div class="modal-backdrop" id="explanationModal" role="dialog" aria-modal="true" aria-labelledby="explanationTitle">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="explanationTitle">An explenation what this page does</h2>
+        <button type="button" id="closeExplanation" aria-label="Close explanation">Close</button>
+      </div>
+      <div class="modal-body">
+        <p>
+          This page is a planning model for the risk described in
+          <a href="https://medium.com/@kanishks772/microsoft-couldnt-afford-claude-code-that-should-terrify-every-engineering-team-8d0cc9323883" target="_blank" rel="noopener noreferrer">“Microsoft Couldn’t Afford Claude Code. That Should Terrify Every Engineering Team.”</a>
+          The article argues that the danger is not that coding agents fail; the danger is that successful adoption turns AI coding into a variable, token-metered compute bill.
+        </p>
+
+        <h3>Core article claim</h3>
+        <p>
+          The article claims Microsoft rolled Claude Code out broadly, saw heavy adoption, and later decided to shut off licenses because usage was “very popular, perhaps a little too popular.” It also cites an Uber-scale example of 5,000 engineers and very high AI budget burn. Treat those numbers as article claims and scenario prompts, not as audited vendor billing data.
+        </p>
+
+        <h3>What the calculator models</h3>
+        <ul>
+          <li><strong>Adoption:</strong> how many engineers actually use the tool.</li>
+          <li><strong>Frequency:</strong> how many sessions each active engineer runs per day.</li>
+          <li><strong>Token load:</strong> how much context and output each session consumes.</li>
+          <li><strong>Model price:</strong> current public pricing or documented multipliers where available.</li>
+          <li><strong>Agent behavior:</strong> retries, tool calls, validation loops, background workers, and multi-agent orchestration.</li>
+        </ul>
+
+        <h3>Agent-specific sources</h3>
+        <ul>
+          <li><a href="https://ampcode.com/manual" target="_blank" rel="noopener noreferrer">Amp manual</a>: deep/smart/rush modes, subagents, Oracle/Librarian, and pass-through pricing assumptions.</li>
+          <li><a href="https://code.claude.com/docs/en/overview" target="_blank" rel="noopener noreferrer">Claude Code docs</a>: terminal/IDE/web agent behavior, model aliases, subscription/API caveats, and token billing context.</li>
+          <li><a href="https://cursor.com/docs" target="_blank" rel="noopener noreferrer">Cursor docs</a>: Agent workflow, Auto + Composer pool, API pool, Max Mode, and model pricing caveats.</li>
+          <li><a href="https://docs.factory.ai/welcome" target="_blank" rel="noopener noreferrer">Factory Droid docs</a>: CLI/App/Exec, Missions, AGENTS.md, skills, hooks, MCP, Droid Core, model multipliers, and rolling rate limits.</li>
+        </ul>
+
+        <h3>How to read the result</h3>
+        <p>
+          A high result does not prove a tool is bad. It shows where governance is needed: model selection, context discipline, caching, budgets, rate limits, review policies, and a rollout plan. The safest interpretation is to use this calculator before procurement, pilot expansion, or organization-wide deployment.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="diffModal" role="dialog" aria-modal="true" aria-labelledby="diffTitle">
+    <div class="modal diff-modal">
+      <div class="modal-header">
+        <h2 id="diffTitle">Saved session diff</h2>
+        <button type="button" id="closeDiff" aria-label="Close saved session diff">Close</button>
+      </div>
+      <div class="modal-body" id="diffBody">
+        <p>No saved sessions yet. Save JSON or HTML first to create local snapshots.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="freertosFlowModal" role="dialog" aria-modal="true" aria-labelledby="freertosFlowTitle">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="freertosFlowTitle">FreeRTOS → Loongson ISO 26262 RTOS flowgraph</h2>
+        <button type="button" id="closeFreertosFlow" aria-label="Close FreeRTOS flowgraph">Close</button>
+      </div>
+      <div class="modal-body">
+        <p>
+          This use case is a safety-critical migration program: move a FreeRTOS-based embedded stack to Loongson CPUs, then harden it into an ISO 26262-oriented RTOS delivery where production C code must pass MISRA C compliance gates. The central engineering issue is not only “can FreeRTOS run on Loongson?” but whether the complete hardware/software system can demonstrate safety mechanisms, spatial independence, temporal independence, controlled failure modes, and enough evidence for an assessor. The AI-agent cost risk is high because each task needs architecture context, hardware-port knowledge, standards evidence, static-analysis cleanup, and repeated verification loops.
+        </p>
+        <div class="flow-diagram" aria-label="FreeRTOS Loongson RTOS migration flowgraph">
+          <div class="flow-row">
+            <div class="flow-node"><strong>1. Safety scope</strong>Define item boundary, ASIL target, safety-related vs non-safety software, Loongson target, toolchain, and certification strategy.</div>
+            <div class="flow-node"><strong>2. Independence concept</strong>Design spatial independence with MMU/MPU-style protection and temporal independence with timing budgets, monitors, and watchdog strategy.</div>
+            <div class="flow-node"><strong>3. Porting gap</strong>Kernel port layer, LoongArch context switch, interrupt model, timers, memory model, boot flow, BSP, drivers, and compiler/runtime deltas.</div>
+          </div>
+          <div class="flow-arrow">↓ validation and evidence gates ↓</div>
+          <div class="flow-row">
+            <div class="flow-node"><strong>4. Kernel hardening</strong>Partition safety tasks, isolate non-safety tasks, control privileged access, define scheduler assumptions, and handle common-cause failure risk.</div>
+            <div class="flow-node"><strong>5. MISRA C 2025 cleanup</strong>Static analysis, rule deviations, code rewrites, generated evidence, peer-review packages, and enforceable CI gates.</div>
+            <div class="flow-node"><strong>6. Safety case</strong>Traceability, requirements, hazard links, verification matrix, coverage targets, tool qualification notes, and release artifacts.</div>
+          </div>
+          <div class="flow-arrow">↓ release decision ↓</div>
+          <div class="flow-row">
+            <div class="flow-node"><strong>7. Hardware verification</strong>Board bring-up, timing tests, interrupt latency, stress, fault injection, watchdog-window tests, and regression automation.</div>
+            <div class="flow-node"><strong>8. Assessment package</strong>Source, docs, safety manual, test reports, MISRA deviations, SBOM, reproducible build, and integration guide.</div>
+            <div class="flow-node"><strong>9. Maintenance loop</strong>Security fixes, Loongson variants, regression suites, compliance delta analysis, customer support, and recertification impact checks.</div>
+          </div>
+        </div>
+        <p>
+          Why this matters for the calculator: agent sessions are not simple chat. They include code search, Loongson/LoongArch porting decisions, safety architecture tradeoffs, standards interpretation, MISRA repair, timing-analysis support, test generation, evidence writing, and re-checking. That is why the preset uses high context and loop multipliers even with only 50 engineers.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="saasFlowModal" role="dialog" aria-modal="true" aria-labelledby="saasFlowTitle">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="saasFlowTitle">Enterprise SaaS platform flowgraph</h2>
+        <button type="button" id="closeSaasFlow" aria-label="Close SaaS flowgraph">Close</button>
+      </div>
+      <div class="modal-body">
+        <p>
+          This use case is a large product-engineering program: build a multi-tenant SaaS platform from architecture through launch. The AI-agent cost risk comes from broad product context, many cross-team decisions, security reviews, integration work, and repeated quality gates across frontend, backend, data, DevOps, and compliance tracks.
+        </p>
+        <div class="flow-diagram" aria-label="Enterprise SaaS platform delivery flowgraph">
+          <div class="flow-row">
+            <div class="flow-node"><strong>1. Product discovery</strong>Personas, pricing model, tenants, roles, workflows, SLAs, roadmap, acceptance criteria.</div>
+            <div class="flow-node"><strong>2. Platform architecture</strong>Multi-tenant boundaries, API design, data model, eventing, auth, billing, audit, observability.</div>
+            <div class="flow-node"><strong>3. Delivery backlog</strong>Split epics across frontend, backend, integrations, data migration, DevOps, QA, and security.</div>
+          </div>
+          <div class="flow-arrow">↓ parallel product streams ↓</div>
+          <div class="flow-row">
+            <div class="flow-node"><strong>4. Core implementation</strong>UI, APIs, services, background jobs, tenant isolation, workflows, admin console.</div>
+            <div class="flow-node"><strong>5. Trust & operations</strong>SSO, RBAC, audit logs, monitoring, alerts, backups, rate limits, incident runbooks.</div>
+            <div class="flow-node"><strong>6. Integrations & data</strong>CRM/payment/email/webhooks, migration tools, import/export, data quality validation.</div>
+          </div>
+          <div class="flow-arrow">↓ launch readiness gates ↓</div>
+          <div class="flow-row">
+            <div class="flow-node"><strong>7. Quality gates</strong>Automated tests, performance, security review, privacy review, accessibility, release checklist.</div>
+            <div class="flow-node"><strong>8. Go-to-market release</strong>Feature flags, docs, onboarding, support playbooks, customer pilots, rollback plan.</div>
+            <div class="flow-node"><strong>9. Scale & iterate</strong>Usage analytics, reliability fixes, customer feedback, cost optimization, roadmap expansion.</div>
+          </div>
+        </div>
+        <p>
+          Why this matters for the calculator: this is not a single coding task. Teams repeatedly ask agents to reason across architecture, product requirements, security, tests, deployments, and customer-facing behavior. That creates high context usage and many looped sessions even without safety-certification overhead.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const inputs = {
+      mode: document.getElementById('mode'),
+      llm: document.getElementById('llm'),
+      engineers: document.getElementById('engineers'),
+      adoption: document.getElementById('adoption'),
+      sessions: document.getElementById('sessions'),
+      workdays: document.getElementById('workdays'),
+      inputTokens: document.getElementById('inputTokens'),
+      outputTokens: document.getElementById('outputTokens'),
+      inputPrice: document.getElementById('inputPrice'),
+      outputPrice: document.getElementById('outputPrice'),
+      seatPrice: document.getElementById('seatPrice'),
+      budget: document.getElementById('budget'),
+      contextMultiplier: document.getElementById('contextMultiplier'),
+      loopMultiplier: document.getElementById('loopMultiplier')
+    };
+
+    const modeEls = {
+      logo: document.getElementById('modeLogo'),
+      title: document.getElementById('modeTitle'),
+      note: document.getElementById('modeNote'),
+      assumptions: document.getElementById('modeAssumptions')
+    };
+
+    const explanationEls = {
+      open: document.getElementById('openExplanation'),
+      close: document.getElementById('closeExplanation'),
+      modal: document.getElementById('explanationModal')
+    };
+
+    const sessionEls = {
+      saveJson: document.getElementById('saveJson'),
+      saveHtml: document.getElementById('saveHtml'),
+      load: document.getElementById('loadSession'),
+      file: document.getElementById('sessionFile'),
+      showDiff: document.getElementById('showDiff')
+    };
+
+    const diffEls = {
+      modal: document.getElementById('diffModal'),
+      close: document.getElementById('closeDiff'),
+      body: document.getElementById('diffBody')
+    };
+
+    const freertosFlowEls = {
+      open: document.getElementById('openFreertosFlow'),
+      close: document.getElementById('closeFreertosFlow'),
+      modal: document.getElementById('freertosFlowModal')
+    };
+
+    const saasFlowEls = {
+      open: document.getElementById('openSaasFlow'),
+      close: document.getElementById('closeSaasFlow'),
+      modal: document.getElementById('saasFlowModal')
+    };
+
+    const savedSessionStorageKey = 'ai-agent-cost-calculator-sessions-v1';
+    let lastResult = null;
+    let activeScenarioKey = 'custom';
+
+    const outputs = {
+      sessionCost: document.getElementById('sessionCost'),
+      tokenBreakdown: document.getElementById('tokenBreakdown'),
+      engineerMonthly: document.getElementById('engineerMonthly'),
+      engineerDaily: document.getElementById('engineerDaily'),
+      teamMonthly: document.getElementById('teamMonthly'),
+      activeEngineers: document.getElementById('activeEngineers'),
+      annualCost: document.getElementById('annualCost'),
+      seatMultiple: document.getElementById('seatMultiple'),
+      seatCompare: document.getElementById('seatCompare'),
+      budgetBurn: document.getElementById('budgetBurn'),
+      budgetText: document.getElementById('budgetText')
+    };
+
+    function model(key, label, inputPrice, outputPrice, note) {
+      return { key, label, inputPrice, outputPrice, note };
+    }
+
+    function factoryModel(key, label, multiplier, note) {
+      const baselineInput = 3;
+      const baselineOutput = 15;
+      return model(
+        key,
+        `${label} · ${multiplier}× Factory multiplier`,
+        Number((baselineInput * multiplier).toFixed(4)),
+        Number((baselineOutput * multiplier).toFixed(4)),
+        `${note} Factory docs publish model multipliers and Standard Credit / Rate Limit behavior rather than public per-token dollars here, so this calculator estimates credit-equivalent cost from a Sonnet-class $3/$15 baseline.`
+      );
+    }
+
+    const modelCatalog = {
+      amp: [
+        model('amp-deep-gpt55', 'Amp Deep · GPT-5.5', 5, 30, 'Amp manual: deep uses GPT-5.5 with extended thinking for complex problems.'),
+        model('amp-smart-opus47', 'Amp Smart · state-of-the-art model mix', 5, 25, 'Amp manual: smart uses state-of-the-art models without constraints; Amp is multi-model across GPT-5.5, Opus 4.7, and fast models. This row uses an Opus-class price as a planning proxy.'),
+        model('amp-rush-gpt55', 'Amp Rush · GPT-5.5', 5, 30, 'Amp manual: rush is fast, low-token GPT-5.5 with no reasoning for small, well-defined tasks.'),
+        model('amp-review-gemini31', 'Amp Review proxy · Gemini 3.1 Pro', 2, 12, 'Planning proxy: the current manual documents subagents generally, mostly in smart mode, but does not specify a fixed Review model.'),
+        model('amp-search-gemini3flash', 'Amp Search/tool proxy · Gemini 3 Flash', 0.5, 3, 'Planning proxy: the manual says Amp charges for certain tools such as web search; this row estimates a low-cost fast-model/tool surface.'),
+        model('amp-oracle-gpt55', 'Amp Oracle · GPT-5.5', 5, 30, 'Amp manual: Oracle currently uses GPT-5.5 with high reasoning and is slower/more expensive than day-to-day editing.'),
+        model('amp-librarian-sonnet46', 'Amp Librarian proxy · Claude Sonnet 4.6', 3, 15, 'Planning proxy: the manual documents Librarian as a remote-codebase research subagent, but does not specify its current model.'),
+        model('amp-viewmedia-gemini3flash', 'Amp View Media proxy · Gemini 3 Flash', 0.5, 3, 'Planning proxy: this calculator estimates a low-cost vision/media helper surface; the current manual excerpt does not specify a View Media model.'),
+        model('amp-handoff-gemini3flash', 'Amp Handoff proxy · Gemini 3 Flash', 0.5, 3, 'Planning proxy: this estimates a lightweight handoff/summarization helper; the current manual excerpt does not specify a Handoff model.'),
+        model('amp-titling-haiku45', 'Amp Titling proxy · Claude Haiku 4.5', 1, 5, 'Planning proxy: this estimates a low-cost title/summarization helper; the current manual excerpt does not specify a Titling model.')
+      ],
+      claude: [
+        model('claude-default', 'Claude Code default', 5, 25, 'Claude Code docs: default resolves by account type; Max, Team Premium, Enterprise pay-as-you-go, and Anthropic API default to Opus 4.8, while Pro/Team Standard/Enterprise subscription seats default to Sonnet 4.6.'),
+        model('claude-opus-48', 'Claude Opus 4.8 / opus alias', 5, 25, 'Claude Code model docs: on Anthropic API, opus resolves to Opus 4.8; use the full model name to pin a version.'),
+        model('claude-opus-48-fast', 'Claude Opus 4.8 Fast', 10, 50, 'Claude Code fast-mode docs: fast mode is Opus with a speed-prioritized API configuration, not a different model; Opus 4.8 fast pricing is $10/$50 MTok.'),
+        model('claude-sonnet-46', 'Claude Sonnet 4.6 / sonnet alias', 3, 15, 'Claude Code model docs: on Anthropic API and Claude Platform on AWS, sonnet resolves to Sonnet 4.6; use the full model name to pin a version.'),
+        model('claude-haiku', 'Claude Haiku / haiku alias', 1, 5, 'Claude Code model docs: haiku is the fast and efficient alias for simple tasks; the exact version can be controlled with ANTHROPIC_DEFAULT_HAIKU_MODEL.'),
+        model('claude-opusplan', 'Claude opusplan hybrid', 4, 20, 'Claude Code model docs: opusplan uses opus during plan mode and sonnet for execution. This row is a blended planning proxy, not a published single-model price.'),
+        model('claude-sonnet-1m', 'Claude Sonnet 1M context', 6, 22.5, 'Claude Code model docs: sonnet[1m] uses Sonnet with a 1M-token context window when the account/model supports it.'),
+        model('claude-opus-47', 'Claude Opus 4.7 provider-dependent', 5, 25, 'Claude Code model docs: Claude Platform on AWS maps opus to Opus 4.7; Bedrock, Vertex, and Foundry may require explicit full model names for newer models.'),
+        model('claude-opus-47-fast', 'Claude Opus 4.7 Fast', 30, 150, 'Claude Code fast-mode docs: Opus 4.7 fast mode is priced at $30/$150 MTok.'),
+        model('claude-sonnet-45', 'Claude Sonnet 4.5 provider-dependent', 3, 15, 'Claude Code model docs: Bedrock, Vertex, and Foundry map sonnet to Sonnet 4.5 unless a newer full model name or default environment variable is configured.')
+      ],
+      cursor: [
+        model('cursor-auto', 'Cursor Auto', 1.25, 6, 'Cursor docs: Auto + Composer pool pricing; Auto lets Cursor balance intelligence, cost efficiency, and reliability.'),
+        model('cursor-composer25', 'Cursor Composer 2.5', 0.5, 2.5, 'Cursor docs: current Cursor-owned Composer model in the Auto + Composer pool.'),
+        model('cursor-composer15', 'Cursor Composer 1.5', 3.5, 17.5, 'Cursor docs: older Composer model; hidden by default.'),
+        model('cursor-claude-sonnet4', 'Claude 4 Sonnet', 3, 15, 'Cursor docs: API-pool model rate; hidden by default.'),
+        model('cursor-claude-sonnet4-1m', 'Claude 4 Sonnet 1M', 6, 22.5, 'Cursor docs: API-pool 1M-context Sonnet rate; input over 200k tokens costs 2x.'),
+        model('cursor-claude-haiku45', 'Claude 4.5 Haiku', 1, 5, 'Cursor docs: API-pool model rate; hidden by default.'),
+        model('cursor-claude-sonnet45', 'Claude 4.5 Sonnet', 3, 15, 'Cursor docs: API-pool model rate; requires Max Mode on request-based plans.'),
+        model('cursor-claude-opus46', 'Claude 4.6 Opus', 5, 25, 'Cursor docs: API-pool model rate; requires Max Mode on request-based plans.'),
+        model('cursor-claude-opus46-fast', 'Claude 4.6 Opus Fast', 30, 150, 'Cursor docs: API-pool limited research preview fast-mode rate.'),
+        model('cursor-claude-sonnet46', 'Claude 4.6 Sonnet', 3, 15, 'Cursor docs: API-pool model rate; requires Max Mode on request-based plans.'),
+        model('cursor-claude-opus47', 'Claude 4.7 Opus', 5, 25, 'Cursor docs: API-pool model rate; requires Max Mode on request-based plans.'),
+        model('cursor-claude-opus47-fast', 'Claude Opus 4.7 Fast', 30, 150, 'Cursor docs: API-pool limited research preview fast-mode rate.'),
+        model('cursor-claude-opus48', 'Claude Opus 4.8', 5, 25, 'Cursor docs: API-pool model rate; requires Max Mode on request-based plans.'),
+        model('cursor-claude-opus48-fast', 'Claude Opus 4.8 Fast', 10, 50, 'Cursor docs: fast mode listed as 3x lower per-token pricing than Opus 4.7 fast mode.'),
+        model('cursor-gemini3-flash', 'Gemini 3 Flash', 0.5, 3, 'Cursor docs: API-pool model rate; hidden by default.'),
+        model('cursor-gemini3-pro', 'Gemini 3 Pro', 2, 12, 'Cursor docs: API-pool model rate; hidden by default.'),
+        model('cursor-gemini3-pro-image', 'Gemini 3 Pro Image Preview', 2, 12, 'Cursor docs: text input/output priced like Gemini 3 Pro; image output has separate image-token pricing not modeled here.'),
+        model('cursor-gemini31-pro', 'Gemini 3.1 Pro', 2, 12, 'Cursor docs: API-pool model rate.'),
+        model('cursor-gemini35-flash', 'Gemini 3.5 Flash', 1.5, 9, 'Cursor docs: API-pool model rate.'),
+        model('cursor-gpt51-codex-mini', 'GPT-5.1 Codex Mini', 0.25, 2, 'Cursor docs: API-pool model rate; hidden by default.'),
+        model('cursor-gpt53-codex', 'GPT-5.3 Codex', 1.75, 14, 'Cursor docs: API-pool model rate; requires Max Mode on request-based plans.'),
+        model('cursor-gpt54', 'GPT-5.4', 2.5, 15, 'Cursor docs: API-pool model rate; Max Mode long context has 2x input pricing.'),
+        model('cursor-gpt54-mini', 'GPT-5.4 Mini', 0.75, 4.5, 'Cursor docs: API-pool model rate; hidden by default.'),
+        model('cursor-gpt54-nano', 'GPT-5.4 Nano', 0.2, 1.25, 'Cursor docs: API-pool model rate; hidden by default.'),
+        model('cursor-gpt55', 'GPT-5.5', 5, 30, 'Cursor docs: API-pool model rate; Max Mode long context has 2x input pricing.'),
+        model('cursor-grok420', 'Grok 4.20', 2, 6, 'Cursor docs: API-pool model rate; input over 200k tokens costs 2x.'),
+        model('cursor-grok43', 'Grok 4.3', 1.25, 2.5, 'Cursor docs: API-pool model rate; requires Max Mode on request-based plans.'),
+        model('cursor-grok-build', 'Grok Build 0.1', 1, 2, 'Cursor docs: API-pool model rate; input over 200k tokens costs 2x.'),
+        model('cursor-kimi-k25', 'Kimi K2.5', 0.6, 3, 'Cursor docs: API-pool model rate; hidden by default.')
+      ],
+      droid: [
+        factoryModel('droid-claude-opus47', 'Claude Opus 4.7', 2, 'Factory models docs: `claude-opus-4-7`; Anthropic model with Max reasoning available.'),
+        factoryModel('droid-claude-opus47-fast', 'Claude Opus 4.7 Fast', 12, 'Factory models docs: `claude-opus-4-7-fast`; fast Anthropic model with Max reasoning available.'),
+        factoryModel('droid-claude-opus46', 'Claude Opus 4.6', 2, 'Factory models docs: `claude-opus-4-6`; Anthropic model with Max reasoning available.'),
+        factoryModel('droid-claude-opus46-fast', 'Claude Opus 4.6 Fast', 12, 'Factory models docs: `claude-opus-4-6-fast`; fast Anthropic model with Max reasoning available.'),
+        factoryModel('droid-sonnet-46', 'Claude Sonnet 4.6', 1.2, 'Factory models docs: `claude-sonnet-4-6`; Anthropic model with Max reasoning available.'),
+        factoryModel('droid-opus-45', 'Claude Opus 4.5', 2, 'Factory models docs: `claude-opus-4-5-20251101`; Anthropic model with Off default reasoning.'),
+        factoryModel('droid-sonnet-45', 'Claude Sonnet 4.5', 1.2, 'Factory models docs: `claude-sonnet-4-5-20250929`; Anthropic model with Off default reasoning.'),
+        factoryModel('droid-haiku-45', 'Claude Haiku 4.5', 0.4, 'Factory models docs: `claude-haiku-4-5-20251001`; lower-multiplier Anthropic model.'),
+        factoryModel('droid-gpt55', 'GPT-5.5', 2, 'Factory models docs: `gpt-5.5`; OpenAI model with Medium default reasoning and Extra High available.'),
+        factoryModel('droid-gpt55-fast', 'GPT-5.5 Fast', 5, 'Factory models docs: `gpt-5.5-fast`; OpenAI fast model with Extra High reasoning available.'),
+        factoryModel('droid-gpt55-pro', 'GPT-5.5 Pro', 12, 'Factory models docs: `gpt-5.5-pro`; highest listed OpenAI multiplier in this calculator.'),
+        factoryModel('droid-gpt54', 'GPT-5.4', 1, 'Factory models docs: `gpt-5.4`; OpenAI baseline multiplier model.'),
+        factoryModel('droid-gpt54-fast', 'GPT-5.4 Fast', 2, 'Factory models docs: `gpt-5.4-fast`; OpenAI fast model.'),
+        factoryModel('droid-gpt54-mini', 'GPT-5.4 Mini', 0.3, 'Factory models docs: `gpt-5.4-mini`; smaller OpenAI model.'),
+        factoryModel('droid-gpt53-codex', 'GPT-5.3-Codex', 0.7, 'Factory models docs: `gpt-5.3-codex`; OpenAI coding model.'),
+        factoryModel('droid-gpt53-codex-fast', 'GPT-5.3-Codex Fast', 1.4, 'Factory models docs: `gpt-5.3-codex-fast`; faster OpenAI coding model.'),
+        factoryModel('droid-gpt52', 'GPT-5.2', 0.7, 'Factory models docs: `gpt-5.2`; OpenAI model with Low default reasoning.'),
+        factoryModel('droid-gpt52-codex', 'GPT-5.2-Codex', 0.7, 'Factory models docs: `gpt-5.2-codex`; OpenAI coding model.'),
+        factoryModel('droid-gemini31-pro', 'Gemini 3.1 Pro', 0.8, 'Factory models docs: `gemini-3.1-pro-preview`; Google model with High default reasoning.'),
+        factoryModel('droid-gemini3-pro', 'Gemini 3 Pro', 0.8, 'Factory models docs: `gemini-3-pro-preview`; Google preview model.'),
+        factoryModel('droid-gemini3-flash', 'Gemini 3 Flash', 0.2, 'Factory models docs: `gemini-3-flash-preview`; low-multiplier Google preview model.'),
+        factoryModel('droid-glm51', 'Droid Core GLM-5.1', 0.55, 'Factory models docs: `glm-5.1`; Droid Core open model.'),
+        factoryModel('droid-kimi26', 'Droid Core Kimi K2.6', 0.4, 'Factory models docs: `kimi-k2.6`; Droid Core open model.'),
+        factoryModel('droid-kimi25', 'Droid Core Kimi K2.5', 0.25, 'Factory models docs: `kimi-k2.5`; Droid Core open model.'),
+        factoryModel('droid-minimax27', 'Droid Core MiniMax M2.7', 0.12, 'Factory models docs: `minimax-m2.7`; lowest listed Droid Core multiplier in this calculator.')
+      ]
+    };
+
+    const modes = {
+      amp: {
+        title: 'Amp mode',
+        homeUrl: 'https://ampcode.com',
+        mark: 'A',
+        logoClass: 'amp-logo',
+        llm: 'amp-smart-opus47',
+        lockLlm: false,
+        note: 'Governed agent workflow with context discipline and observability overhead.',
+        assumptions: 'Manual-backed assumption: Amp has deep, smart, and rush modes; can spawn subagents for suitable complex tasks; exposes Oracle and Librarian tools; and uses pass-through provider/API pricing for individual/non-enterprise workspaces. Specific helper-model rows are planning proxies when the manual does not name a fixed model.',
+        values: {
+          engineers: 1000,
+          adoption: 80,
+          sessions: 24,
+          workdays: 20,
+          inputTokens: 180000,
+          outputTokens: 28000,
+          seatPrice: 80,
+          budget: 1000000,
+          contextMultiplier: 0.75,
+          loopMultiplier: 1.10
+        }
+      },
+      claude: {
+        title: 'Claude Code mode',
+        homeUrl: 'https://code.claude.com',
+        mark: 'C',
+        logoClass: 'claude-logo',
+        llm: 'claude-sonnet-46',
+        lockLlm: false,
+        note: 'CLI coding agent with deep repo context, shell loops, and strong autonomous editing.',
+        assumptions: 'Docs-backed assumption: Claude Code is an agentic coding tool for terminal, IDE, desktop, and web that reads code, edits files, runs commands, and can run parallel agents. API users are charged by token consumption; Pro/Max/Team/Enterprise subscribers have included plan usage, so local dollar estimates are not authoritative billing. Costs vary with model alias/provider mapping, context size, prompt caching, auto-compaction, extended thinking, subagents, and agent teams.',
+        values: {
+          engineers: 1000,
+          adoption: 80,
+          sessions: 30,
+          workdays: 20,
+          inputTokens: 220000,
+          outputTokens: 35000,
+          seatPrice: 50,
+          budget: 1000000,
+          contextMultiplier: 1.00,
+          loopMultiplier: 1.30
+        }
+      },
+      cursor: {
+        title: 'Cursor mode',
+        homeUrl: 'https://cursor.com',
+        mark: '◆',
+        logoClass: 'cursor-logo',
+        llm: 'cursor-auto',
+        lockLlm: false,
+        note: 'IDE-first workflow where Agent can search, edit, run commands, and use either the Auto + Composer pool or API-pool models.',
+        assumptions: 'Docs-backed assumption: Cursor Agent is modeled as an IDE workflow with file/search/edit/terminal tools. Cursor currently separates usage into Auto + Composer and API pools; this calculator uses published per-1M-token rates where listed, but subscription inclusions, Max Mode, Teams Cursor Token Rate, cache reads/writes, and image-token pricing mean totals are planning estimates, not invoices.',
+        values: {
+          engineers: 1000,
+          adoption: 85,
+          sessions: 35,
+          workdays: 20,
+          inputTokens: 90000,
+          outputTokens: 16000,
+          seatPrice: 40,
+          budget: 750000,
+          contextMultiplier: 0.65,
+          loopMultiplier: 0.95
+        }
+      },
+      droid: {
+        title: 'Factory Droid mode',
+        homeUrl: 'https://factory.ai',
+        mark: 'D',
+        logoClass: 'droid-logo',
+        llm: 'droid-sonnet-46',
+        lockLlm: false,
+        note: 'Factory Droid workflow where CLI/App/Exec sessions can edit code, run commands, use AGENTS.md, skills, hooks, MCP, custom droids, and Missions.',
+        assumptions: 'Docs-backed assumption: Factory Droid is modeled as an agentic development platform with interactive CLI/App sessions, headless Droid Exec, and Missions for planned multi-agent work. Factory currently publishes model multipliers plus Standard Usage, rolling Rate Limits, Extra Usage, and Droid Core behavior; this calculator converts those multipliers into transparent credit-equivalent estimates, not invoices.',
+        values: {
+          engineers: 1000,
+          adoption: 60,
+          sessions: 14,
+          workdays: 20,
+          inputTokens: 320000,
+          outputTokens: 52000,
+          seatPrice: 120,
+          budget: 1500000,
+          contextMultiplier: 1.20,
+          loopMultiplier: 1.65
+        }
+      }
+    };
+
+    const scenarios = {
+      light: {
+        engineers: 100,
+        adoption: 50,
+        sessions: 10,
+        workdays: 20,
+        inputTokens: 60000,
+        outputTokens: 10000,
+        contextMultiplier: 0.7,
+        loopMultiplier: 0.9,
+        budget: 50000
+      },
+      article: {
+        engineers: 1000,
+        adoption: 80,
+        sessions: 30,
+        workdays: 20,
+        inputTokens: 200000,
+        outputTokens: 30000,
+        contextMultiplier: 1,
+        loopMultiplier: 1,
+        budget: 1000000
+      },
+      heavy: {
+        engineers: 1000,
+        adoption: 100,
+        sessions: 60,
+        workdays: 22,
+        inputTokens: 500000,
+        outputTokens: 80000,
+        contextMultiplier: 1.1,
+        loopMultiplier: 1.45,
+        budget: 2000000
+      },
+      uberish: {
+        engineers: 5000,
+        adoption: 84,
+        sessions: 30,
+        workdays: 20,
+        inputTokens: 200000,
+        outputTokens: 30000,
+        contextMultiplier: 1,
+        loopMultiplier: 1,
+        budget: 10000000
+      },
+      freertosLoongson: {
+        engineers: 50,
+        adoption: 100,
+        sessions: 45,
+        workdays: 24,
+        inputTokens: 420000,
+        outputTokens: 70000,
+        contextMultiplier: 1.35,
+        loopMultiplier: 1.9,
+        budget: 250000
+      },
+      enterpriseSaas: {
+        engineers: 90,
+        adoption: 90,
+        sessions: 38,
+        workdays: 22,
+        inputTokens: 260000,
+        outputTokens: 45000,
+        contextMultiplier: 1.15,
+        loopMultiplier: 1.55,
+        budget: 600000
+      }
+    };
+
+    const scenarioMeta = {
+      custom: {
+        title: 'Custom calculator session',
+        description: 'Manually adjusted calculator values rather than one of the built-in presets.',
+        workType: 'Custom planning estimate'
+      },
+      light: {
+        title: 'Light use pilot',
+        description: 'Lower-adoption, lower-token pilot for cautious early rollout planning.',
+        workType: 'Pilot / limited deployment'
+      },
+      article: {
+        title: 'Article-style cost-risk example',
+        description: 'Scenario shaped around the article warning: high adoption, frequent sessions, and token-metered usage at enterprise scale.',
+        workType: 'AI coding cost-risk benchmark'
+      },
+      heavy: {
+        title: 'Heavy enterprise use',
+        description: 'Stress-test scenario with high adoption, frequent use, larger context, and more autonomous agent loops.',
+        workType: 'Enterprise stress test'
+      },
+      uberish: {
+        title: '5,000-engineer organization',
+        description: 'Large-organization scenario inspired by the article’s 5,000-engineer scale claim.',
+        workType: 'Large enterprise rollout'
+      },
+      freertosLoongson: {
+        title: 'FreeRTOS → Loongson ISO 26262 RTOS',
+        description: 'Safety-critical RTOS migration with Loongson/LoongArch porting, memory protection, temporal independence, MISRA C 2025 cleanup, safety-case evidence, and assessor-facing verification artifacts.',
+        workType: 'Safety-critical embedded / automotive RTOS program'
+      },
+      enterpriseSaas: {
+        title: 'Enterprise SaaS platform',
+        description: 'Large SaaS build covering multi-tenant backend, web UI, billing, identity, audit logs, observability, CI/CD, data migration, security reviews, and integrations.',
+        workType: 'Large cloud product engineering program'
+      }
+    };
+
+    function numberValue(input) {
+      return Number(input.value) || 0;
+    }
+
+    function money(value) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        maximumFractionDigits: value >= 100 ? 0 : 2
+      }).format(value);
+    }
+
+    function compactMoney(value) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        notation: 'compact',
+        maximumFractionDigits: 2
+      }).format(value);
+    }
+
+    function plainNumber(value) {
+      return new Intl.NumberFormat('en-US', {
+        maximumFractionDigits: 1
+      }).format(value);
+    }
+
+    function setNumericValues(values) {
+      Object.entries(values).forEach(([key, value]) => {
+        inputs[key].value = value;
+      });
+    }
+
+    function currentModel() {
+      return modelCatalog[inputs.mode.value].find((entry) => entry.key === inputs.llm.value);
+    }
+
+    function populateModelOptions(modeKey) {
+      inputs.llm.innerHTML = '';
+      modelCatalog[modeKey].forEach((entry) => {
+        const option = document.createElement('option');
+        option.value = entry.key;
+        option.textContent = entry.label;
+        option.title = entry.note;
+        inputs.llm.appendChild(option);
+      });
+    }
+
+    function applyLlm(llmKey) {
+      const llm = modelCatalog[inputs.mode.value].find((entry) => entry.key === llmKey);
+      inputs.inputPrice.value = llm.inputPrice;
+      inputs.outputPrice.value = llm.outputPrice;
+      inputs.llm.title = `${llm.label}: ${llm.note}`;
+    }
+
+    function applyMode(modeKey) {
+      const mode = modes[modeKey];
+      activeScenarioKey = 'custom';
+      document.body.dataset.mode = modeKey;
+      modeEls.logo.textContent = mode.mark;
+      modeEls.logo.className = `mode-logo ${mode.logoClass}`;
+      modeEls.title.textContent = mode.title;
+      modeEls.title.href = mode.homeUrl;
+      modeEls.title.title = `Open ${mode.title} home page`;
+      modeEls.note.textContent = mode.note;
+      modeEls.assumptions.textContent = mode.assumptions;
+      populateModelOptions(modeKey);
+      inputs.llm.value = mode.llm;
+      inputs.llm.disabled = mode.lockLlm;
+      setNumericValues(mode.values);
+      applyLlm(mode.llm);
+      modeEls.assumptions.textContent = `${mode.assumptions} Selected model: ${currentModel().label} — ${currentModel().note}`;
+      calculate();
+    }
+
+    function calculate() {
+      const engineers = numberValue(inputs.engineers);
+      const adoption = Math.min(Math.max(numberValue(inputs.adoption), 0), 100) / 100;
+      const sessions = numberValue(inputs.sessions);
+      const workdays = numberValue(inputs.workdays);
+      const inputTokens = numberValue(inputs.inputTokens);
+      const outputTokens = numberValue(inputs.outputTokens);
+      const inputPrice = numberValue(inputs.inputPrice);
+      const outputPrice = numberValue(inputs.outputPrice);
+      const seatPrice = numberValue(inputs.seatPrice);
+      const budget = numberValue(inputs.budget);
+      const contextMultiplier = numberValue(inputs.contextMultiplier);
+      const loopMultiplier = numberValue(inputs.loopMultiplier);
+      const effectiveInputTokens = inputTokens * contextMultiplier * loopMultiplier;
+      const effectiveOutputTokens = outputTokens * loopMultiplier;
+
+      const activeEngineers = engineers * adoption;
+      const inputCost = effectiveInputTokens / 1_000_000 * inputPrice;
+      const outputCost = effectiveOutputTokens / 1_000_000 * outputPrice;
+      const sessionCost = inputCost + outputCost;
+      const engineerDaily = sessions * sessionCost;
+      const engineerMonthly = engineerDaily * workdays;
+      const teamMonthly = activeEngineers * engineerMonthly;
+      const annualCost = teamMonthly * 12;
+      const fixedSeatMonthly = activeEngineers * seatPrice;
+      const seatMultiple = fixedSeatMonthly > 0 ? teamMonthly / fixedSeatMonthly : 0;
+      const dailyTeamCost = workdays > 0 ? teamMonthly / workdays : 0;
+      const daysToBurnBudget = dailyTeamCost > 0 && budget > 0 ? budget / dailyTeamCost : 0;
+
+      lastResult = {
+        engineers,
+        adoption: adoption * 100,
+        sessions,
+        workdays,
+        inputTokens,
+        outputTokens,
+        inputPrice,
+        outputPrice,
+        seatPrice,
+        budget,
+        contextMultiplier,
+        loopMultiplier,
+        effectiveInputTokens,
+        effectiveOutputTokens,
+        activeEngineers,
+        inputCost,
+        outputCost,
+        sessionCost,
+        engineerDaily,
+        engineerMonthly,
+        teamMonthly,
+        annualCost,
+        fixedSeatMonthly,
+        seatMultiple,
+        dailyTeamCost,
+        daysToBurnBudget
+      };
+
+      outputs.sessionCost.textContent = money(sessionCost);
+      outputs.tokenBreakdown.textContent = `Input ${money(inputCost)} + output ${money(outputCost)} (${plainNumber(effectiveInputTokens / 1000)}K in / ${plainNumber(effectiveOutputTokens / 1000)}K out effective tokens)`;
+      outputs.engineerMonthly.textContent = money(engineerMonthly);
+      outputs.engineerDaily.textContent = `${money(engineerDaily)} per active engineer per workday`;
+      outputs.teamMonthly.textContent = compactMoney(teamMonthly);
+      outputs.activeEngineers.textContent = `${plainNumber(activeEngineers)} active engineers`;
+      outputs.annualCost.textContent = compactMoney(annualCost);
+      outputs.seatMultiple.textContent = `${plainNumber(seatMultiple)}×`;
+      outputs.seatCompare.textContent = `${compactMoney(teamMonthly)} token-metered vs ${compactMoney(fixedSeatMonthly)} fixed seats`;
+
+      if (budget <= 0 || dailyTeamCost <= 0) {
+        outputs.budgetBurn.textContent = '—';
+        outputs.budgetText.textContent = 'Enter a monthly budget to compare';
+      } else {
+        outputs.budgetBurn.textContent = `${plainNumber(daysToBurnBudget)} workdays`;
+        outputs.budgetText.textContent = `${compactMoney(budget)} budget ÷ ${compactMoney(dailyTeamCost)} daily run rate`;
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>'"]/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+      }[char]));
+    }
+
+    function slug(value) {
+      return String(value).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 80) || 'session';
+    }
+
+    function currentValues() {
+      return {
+        engineers: numberValue(inputs.engineers),
+        adoption: numberValue(inputs.adoption),
+        sessions: numberValue(inputs.sessions),
+        workdays: numberValue(inputs.workdays),
+        inputTokens: numberValue(inputs.inputTokens),
+        outputTokens: numberValue(inputs.outputTokens),
+        inputPrice: numberValue(inputs.inputPrice),
+        outputPrice: numberValue(inputs.outputPrice),
+        seatPrice: numberValue(inputs.seatPrice),
+        budget: numberValue(inputs.budget),
+        contextMultiplier: numberValue(inputs.contextMultiplier),
+        loopMultiplier: numberValue(inputs.loopMultiplier)
+      };
+    }
+
+    function collectSession() {
+      calculate();
+      const mode = modes[inputs.mode.value];
+      const llm = currentModel();
+      const task = scenarioMeta[activeScenarioKey] || scenarioMeta.custom;
+      const createdAt = new Date().toISOString();
+      const displayName = `${task.title} · ${mode.title} · ${llm.label} · ${createdAt.slice(0, 19).replace('T', ' ')}`;
+      return {
+        schema: 'ai-agent-cost-calculator-session-v1',
+        id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        createdAt,
+        displayName,
+        scenarioKey: activeScenarioKey,
+        task,
+        pageTitle: document.title,
+        sourceUrl: location.href,
+        modeKey: inputs.mode.value,
+        modeTitle: mode.title,
+        modeHomeUrl: mode.homeUrl,
+        modeNote: mode.note,
+        modeAssumptions: mode.assumptions,
+        llmKey: inputs.llm.value,
+        model: { ...llm },
+        values: currentValues(),
+        results: { ...lastResult },
+        resultText: {
+          sessionCost: outputs.sessionCost.textContent,
+          tokenBreakdown: outputs.tokenBreakdown.textContent,
+          engineerMonthly: outputs.engineerMonthly.textContent,
+          engineerDaily: outputs.engineerDaily.textContent,
+          teamMonthly: outputs.teamMonthly.textContent,
+          activeEngineers: outputs.activeEngineers.textContent,
+          annualCost: outputs.annualCost.textContent,
+          seatMultiple: outputs.seatMultiple.textContent,
+          seatCompare: outputs.seatCompare.textContent,
+          budgetBurn: outputs.budgetBurn.textContent,
+          budgetText: outputs.budgetText.textContent
+        }
+      };
+    }
+
+    function downloadText(filename, content, type) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function loadStoredSessions() {
+      try {
+        return JSON.parse(localStorage.getItem(savedSessionStorageKey) || '[]');
+      } catch {
+        return [];
+      }
+    }
+
+    function storeSession(session) {
+      try {
+        const sessions = loadStoredSessions();
+        sessions.push(session);
+        localStorage.setItem(savedSessionStorageKey, JSON.stringify(sessions.slice(-50)));
+      } catch {
+        alert('Saved the file, but browser storage is unavailable for diff history.');
+      }
+    }
+
+    function buildHtmlReport(session) {
+      const rows = [
+        ['Mode', session.modeTitle],
+        ['Model', session.model.label],
+        ['Engineers', session.values.engineers],
+        ['Adoption %', session.values.adoption],
+        ['Sessions / engineer / day', session.values.sessions],
+        ['Workdays / month', session.values.workdays],
+        ['Input tokens / session', session.values.inputTokens],
+        ['Output tokens / session', session.values.outputTokens],
+        ['Input price / 1M tokens', `$${session.values.inputPrice}`],
+        ['Output price / 1M tokens', `$${session.values.outputPrice}`],
+        ['Context multiplier', session.values.contextMultiplier],
+        ['Agent loop multiplier', session.values.loopMultiplier],
+        ['Cost / session', session.resultText.sessionCost],
+        ['Cost / active engineer / month', session.resultText.engineerMonthly],
+        ['Team monthly cost', session.resultText.teamMonthly],
+        ['Team annualized cost', session.resultText.annualCost],
+        ['Budget burn', session.resultText.budgetBurn]
+      ];
+      return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${escapeHtml(session.displayName)}</title>
+  <style>
+    body{font-family:Arial,sans-serif;margin:32px;background:#0f172a;color:#e5e7eb;line-height:1.55}a{color:#38bdf8}.card{max-width:920px;border:1px solid #374151;border-radius:18px;background:#111827;padding:24px}table{width:100%;border-collapse:collapse;margin-top:18px}td,th{border-bottom:1px solid #374151;padding:9px;text-align:left}th{color:#fff}.muted{color:#9ca3af}code{color:#bae6fd}</style>
+</head>
+<body>
+  <main class="card">
+    <h1>${escapeHtml(session.displayName)}</h1>
+    <p class="muted">Saved ${escapeHtml(session.createdAt)} from the AI Coding Agent Cost Calculator.</p>
+    <p><strong>Agent:</strong> <a href="${escapeHtml(session.modeHomeUrl)}">${escapeHtml(session.modeTitle)}</a></p>
+    <p><strong>Assumption:</strong> ${escapeHtml(session.modeAssumptions)}</p>
+    <p><strong>Model note:</strong> ${escapeHtml(session.model.note)}</p>
+    <table><tbody>${rows.map(([key, value]) => `<tr><th>${escapeHtml(key)}</th><td>${escapeHtml(value)}</td></tr>`).join('')}</tbody></table>
+    <h2>Formula</h2>
+    <p><code>effective tokens = base_tokens × context_multiplier × agent_loop_multiplier</code></p>
+    <p><code>monthly cost = active_engineers × sessions_per_day × workdays × session_cost</code></p>
+  </main>
+</body>
+</html>`;
+    }
+
+    function applySession(session) {
+      const modeKey = session.modeKey || session.mode;
+      if (!modes[modeKey]) {
+        alert('This saved session uses an unknown agent mode.');
+        return;
+      }
+      inputs.mode.value = modeKey;
+      applyMode(modeKey);
+      const llmKey = session.llmKey || session.llm;
+      if (llmKey && modelCatalog[modeKey].some((entry) => entry.key === llmKey)) {
+        inputs.llm.value = llmKey;
+        applyLlm(llmKey);
+      }
+      if (session.values) {
+        setNumericValues(session.values);
+      }
+      const llm = currentModel();
+      modeEls.assumptions.textContent = `${modes[inputs.mode.value].assumptions} Loaded saved model: ${llm.label} — ${llm.note}`;
+      calculate();
+    }
+
+    function toolClass(session) {
+      return `tool-${['amp', 'claude', 'cursor', 'droid'].includes(session.modeKey) ? session.modeKey : 'custom'}`;
+    }
+
+    function adjustedSessionResults(session, engineerOverride) {
+      const baseEngineers = Number(session.values?.engineers) || 0;
+      const engineers = engineerOverride ?? baseEngineers;
+      const adoption = Math.min(Math.max(Number(session.values?.adoption) || 0, 0), 100) / 100;
+      const sessionsPerDay = Number(session.values?.sessions) || 0;
+      const workdays = Number(session.values?.workdays) || 0;
+      const sessionCost = Number(session.results?.sessionCost) || 0;
+      const activeEngineers = engineers * adoption;
+      const engineerDaily = sessionsPerDay * sessionCost;
+      const engineerMonthly = engineerDaily * workdays;
+      const teamMonthly = activeEngineers * engineerMonthly;
+      return {
+        engineers,
+        activeEngineers,
+        engineerMonthly,
+        teamMonthly,
+        annualCost: teamMonthly * 12,
+        sessionCost
+      };
+    }
+
+    function renderDiff(engineerOverride = null) {
+      const sessions = loadStoredSessions();
+      if (sessions.length === 0) {
+        diffEls.body.innerHTML = '<p>No saved sessions yet. Save JSON or HTML first to create local snapshots.</p>';
+        return;
+      }
+      const maxSavedEngineers = Math.max(...sessions.map((session) => Number(session.values?.engineers) || 0), 1);
+      const sliderMax = Math.max(10, Math.ceil(maxSavedEngineers * 2));
+      const selectedEngineers = Math.min(Math.max(engineerOverride ?? maxSavedEngineers, 1), sliderMax);
+      const adjusted = sessions.map((session) => ({
+        session,
+        metrics: adjustedSessionResults(session, selectedEngineers),
+        task: session.task || scenarioMeta[session.scenarioKey] || scenarioMeta.custom,
+        className: toolClass(session)
+      }));
+      const maxMonthly = Math.max(...adjusted.map((entry) => entry.metrics.teamMonthly), 1);
+      const totalMonthly = adjusted.reduce((sum, entry) => sum + entry.metrics.teamMonthly, 0);
+      const maxEntry = adjusted.reduce((max, entry) => entry.metrics.teamMonthly > max.metrics.teamMonthly ? entry : max, adjusted[0]);
+      const histogram = sessions.map((session) => {
+        const entry = adjusted.find((item) => item.session === session);
+        const monthly = entry.metrics.teamMonthly;
+        const width = Math.max(1, monthly / maxMonthly * 100);
+        return `<div class="histogram-row ${entry.className}">
+          <div class="histogram-label" title="${escapeHtml(entry.task.description)}">${escapeHtml(entry.task.title)} · <span class="tool-chip ${entry.className}">${escapeHtml(session.modeTitle || session.modeKey)}</span></div>
+          <div class="histogram-track"><div class="histogram-bar" style="width:${width}%"></div></div>
+          <div class="histogram-value">${escapeHtml(compactMoney(monthly))}</div>
+        </div>`;
+      }).join('');
+      const detailCards = adjusted.map(({ session, metrics, task, className }) => `<div class="diff-task-card ${className}">
+          <strong>${escapeHtml(task.title)} <span class="tool-chip ${className}">${escapeHtml(session.modeTitle || session.modeKey)}</span></strong>
+          <small><b>Work type:</b> ${escapeHtml(task.workType)}</small>
+          <small><b>Agent/model:</b> ${escapeHtml(session.modeTitle || session.modeKey)} / ${escapeHtml(session.model?.label || session.llmKey)}</small>
+          <small><b>What-if scale:</b> ${escapeHtml(metrics.engineers)} engineers, ${escapeHtml(plainNumber(metrics.activeEngineers))} active at ${escapeHtml(session.values?.adoption ?? '')}% adoption, ${escapeHtml(session.values?.sessions ?? '')} sessions/engineer/day</small>
+          <small><b>What-if monthly:</b> ${escapeHtml(compactMoney(metrics.teamMonthly))} (${escapeHtml(compactMoney(metrics.annualCost))} annualized)</small>
+          <small><b>Task:</b> ${escapeHtml(task.description)}</small>
+        </div>`).join('');
+      const tableRows = adjusted.map(({ session, metrics, task, className }) => `<tr class="diff-row-tool ${className}">
+        <td>${escapeHtml(session.createdAt?.slice(0, 19).replace('T', ' ') || 'Saved session')}</td>
+        <td>${escapeHtml(task.title)}</td>
+        <td><span class="tool-chip ${className}">${escapeHtml(session.modeTitle || session.modeKey)}</span></td>
+        <td>${escapeHtml(session.model?.label || session.llmKey)}</td>
+        <td>${escapeHtml(metrics.engineers)} (${escapeHtml(session.values?.engineers ?? '')} saved)</td>
+        <td>${escapeHtml(session.values?.sessions ?? '')}</td>
+        <td>${escapeHtml(plainNumber(session.values?.inputTokens || 0))} / ${escapeHtml(plainNumber(session.values?.outputTokens || 0))}</td>
+        <td>${escapeHtml(session.values?.contextMultiplier ?? '')}× / ${escapeHtml(session.values?.loopMultiplier ?? '')}×</td>
+        <td>${escapeHtml(money(metrics.sessionCost))}</td>
+        <td>${escapeHtml(compactMoney(metrics.teamMonthly))}</td>
+      </tr>`).join('');
+      diffEls.body.innerHTML = `<p>Histogram compares <strong>team monthly cost</strong> across ${sessions.length} browser-saved snapshots. What-if combined monthly run rate: <strong>${escapeHtml(compactMoney(totalMonthly))}</strong>. Highest shown scenario: <strong>${escapeHtml(maxEntry.task.title)}</strong> at <strong>${escapeHtml(compactMoney(maxEntry.metrics.teamMonthly))}</strong>.</p>
+        <div class="diff-controls">
+          <label for="diffEngineerSlider"><strong>What-if engineers for every saved session:</strong> <span class="diff-controls-output" id="diffEngineerValue">${escapeHtml(selectedEngineers)}</span></label>
+          <input id="diffEngineerSlider" type="range" min="1" max="${escapeHtml(sliderMax)}" step="1" value="${escapeHtml(selectedEngineers)}">
+          <small>Moves every saved scenario to the same engineer count while preserving each scenario's adoption %, sessions/day, token profile, tool/model, and multipliers.</small>
+        </div>
+        <div class="histogram">${histogram}</div>
+        <h3>Task details in this diff</h3>
+        <div class="diff-task-grid">${detailCards}</div>
+        <table class="diff-table">
+          <thead><tr><th>Saved</th><th>Task</th><th>Agent</th><th>Model</th><th>Engineers</th><th>Sessions/day</th><th>Tokens in/out</th><th>Ctx/loop</th><th>Session</th><th>Monthly</th></tr></thead>
+          <tbody>${tableRows}</tbody>
+        </table>`;
+      const slider = document.getElementById('diffEngineerSlider');
+      slider.addEventListener('input', () => renderDiff(Number(slider.value)));
+    }
+
+    inputs.mode.addEventListener('change', () => applyMode(inputs.mode.value));
+    inputs.llm.addEventListener('change', () => {
+      applyLlm(inputs.llm.value);
+      const llm = currentModel();
+      modeEls.assumptions.textContent = `${modes[inputs.mode.value].assumptions} LLM assumption: ${llm.label} — ${llm.note}`;
+      calculate();
+    });
+
+    Object.entries(inputs).forEach(([key, input]) => {
+      if (key !== 'mode' && key !== 'llm') {
+        input.addEventListener('input', () => {
+          activeScenarioKey = 'custom';
+          calculate();
+        });
+      }
+    });
+
+    document.querySelectorAll('[data-scenario]').forEach((button) => {
+      button.addEventListener('click', () => {
+        activeScenarioKey = button.dataset.scenario;
+        const scenario = scenarios[button.dataset.scenario];
+        setNumericValues(scenario);
+        calculate();
+      });
+    });
+
+    function setExplanationOpen(isOpen) {
+      explanationEls.modal.classList.toggle('open', isOpen);
+      if (isOpen) {
+        explanationEls.close.focus();
+      } else {
+        explanationEls.open.focus();
+      }
+    }
+
+    explanationEls.open.addEventListener('click', () => setExplanationOpen(true));
+    explanationEls.close.addEventListener('click', () => setExplanationOpen(false));
+    explanationEls.modal.addEventListener('click', (event) => {
+      if (event.target === explanationEls.modal) {
+        setExplanationOpen(false);
+      }
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && explanationEls.modal.classList.contains('open')) {
+        setExplanationOpen(false);
+      }
+    });
+
+    function setDiffOpen(isOpen) {
+      diffEls.modal.classList.toggle('open', isOpen);
+      if (isOpen) {
+        diffEls.close.focus();
+      } else {
+        sessionEls.showDiff.focus();
+      }
+    }
+
+    sessionEls.saveJson.addEventListener('click', () => {
+      const session = collectSession();
+      storeSession(session);
+      downloadText(`${slug(session.displayName)}.json`, JSON.stringify(session, null, 2), 'application/json');
+    });
+
+    sessionEls.saveHtml.addEventListener('click', () => {
+      const session = collectSession();
+      storeSession(session);
+      downloadText(`${slug(session.displayName)}.html`, buildHtmlReport(session), 'text/html');
+    });
+
+    sessionEls.load.addEventListener('click', () => sessionEls.file.click());
+    sessionEls.file.addEventListener('change', () => {
+      const file = sessionEls.file.files[0];
+      if (!file) {
+        return;
+      }
+      const reader = new FileReader();
+      reader.addEventListener('load', () => {
+        try {
+          const session = JSON.parse(reader.result);
+          applySession(session);
+          storeSession({ ...session, id: `${Date.now()}-imported`, importedAt: new Date().toISOString() });
+        } catch {
+          alert('Could not load this saved session JSON file.');
+        } finally {
+          sessionEls.file.value = '';
+        }
+      });
+      reader.readAsText(file);
+    });
+
+    sessionEls.showDiff.addEventListener('click', () => {
+      renderDiff();
+      setDiffOpen(true);
+    });
+    diffEls.close.addEventListener('click', () => setDiffOpen(false));
+    diffEls.modal.addEventListener('click', (event) => {
+      if (event.target === diffEls.modal) {
+        setDiffOpen(false);
+      }
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && diffEls.modal.classList.contains('open')) {
+        setDiffOpen(false);
+      }
+    });
+
+    function setFreertosFlowOpen(isOpen) {
+      freertosFlowEls.modal.classList.toggle('open', isOpen);
+      if (isOpen) {
+        freertosFlowEls.close.focus();
+      } else {
+        freertosFlowEls.open.focus();
+      }
+    }
+
+    freertosFlowEls.open.addEventListener('click', () => setFreertosFlowOpen(true));
+    freertosFlowEls.close.addEventListener('click', () => setFreertosFlowOpen(false));
+    freertosFlowEls.modal.addEventListener('click', (event) => {
+      if (event.target === freertosFlowEls.modal) {
+        setFreertosFlowOpen(false);
+      }
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && freertosFlowEls.modal.classList.contains('open')) {
+        setFreertosFlowOpen(false);
+      }
+    });
+
+    function setSaasFlowOpen(isOpen) {
+      saasFlowEls.modal.classList.toggle('open', isOpen);
+      if (isOpen) {
+        saasFlowEls.close.focus();
+      } else {
+        saasFlowEls.open.focus();
+      }
+    }
+
+    saasFlowEls.open.addEventListener('click', () => setSaasFlowOpen(true));
+    saasFlowEls.close.addEventListener('click', () => setSaasFlowOpen(false));
+    saasFlowEls.modal.addEventListener('click', (event) => {
+      if (event.target === saasFlowEls.modal) {
+        setSaasFlowOpen(false);
+      }
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && saasFlowEls.modal.classList.contains('open')) {
+        setSaasFlowOpen(false);
+      }
+    });
+
+    applyMode('amp');
+  </script>
+</body>
+</html>
